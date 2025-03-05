@@ -40,97 +40,99 @@ while ($row = $recentUsersResult->fetch_assoc()) {
 $conn->close();
 ?>
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h1><i class="fas fa-tachometer-alt me-2"></i> Tableau de bord</h1>
-        <p class="text-muted">Bienvenue dans le panneau d'administration du site</p>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-3">
-        <div class="stats-card primary">
-            <i class="fas fa-users"></i>
-            <h2><?= $userCount ?></h2>
-            <p>Utilisateurs inscrits</p>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stats-card success">
-            <i class="fas fa-user-shield"></i>
-            <h2><?= $levelCounts[USER_LEVEL_ADMIN] ?? 0 ?></h2>
-            <p>Administrateurs</p>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stats-card warning">
-            <i class="fas fa-user-graduate"></i>
-            <h2><?= $levelCounts[USER_LEVEL_MODERATOR] ?? 0 ?></h2>
-            <p>Modérateurs</p>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stats-card danger">
-            <i class="fas fa-user-lock"></i>
-            <h2><?= $bannedCount ?></h2>
-            <p>Utilisateurs bannis</p>
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold flex items-center text-gray-800">
+                <i class="fas fa-tachometer-alt mr-2 text-blue-600"></i> Tableau de bord
+            </h1>
+            <p class="text-gray-500 mt-1">Bienvenue dans le panneau d'administration du site</p>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Utilisateurs récents</h5>
-                <a href="users.php" class="btn btn-sm btn-primary">
-                    <i class="fas fa-users"></i> Gérer tous les utilisateurs
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nom d'utilisateur</th>
-                                <th>Email</th>
-                                <th>Niveau</th>
-                                <th>Date d'inscription</th>
-                                <th>Actions</th>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div>
+        <div class="stats-card primary rounded-lg shadow-md">
+            <i class="fas fa-users text-4xl opacity-50 mb-2"></i>
+            <h2 class="text-4xl font-bold my-2"><?= $userCount ?></h2>
+            <p class="text-lg opacity-80">Utilisateurs inscrits</p>
+        </div>
+    </div>
+    
+    <div>
+        <div class="stats-card success rounded-lg shadow-md">
+            <i class="fas fa-user-shield text-4xl opacity-50 mb-2"></i>
+            <h2 class="text-4xl font-bold my-2"><?= $levelCounts[USER_LEVEL_ADMIN] ?? 0 ?></h2>
+            <p class="text-lg opacity-80">Administrateurs</p>
+        </div>
+    </div>
+    
+    <div>
+        <div class="stats-card warning rounded-lg shadow-md">
+            <i class="fas fa-user-graduate text-4xl opacity-50 mb-2"></i>
+            <h2 class="text-4xl font-bold my-2"><?= $levelCounts[USER_LEVEL_MODERATOR] ?? 0 ?></h2>
+            <p class="text-lg opacity-80">Modérateurs</p>
+        </div>
+    </div>
+    
+    <div>
+        <div class="stats-card danger rounded-lg shadow-md">
+            <i class="fas fa-user-lock text-4xl opacity-50 mb-2"></i>
+            <h2 class="text-4xl font-bold my-2"><?= $bannedCount ?></h2>
+            <p class="text-lg opacity-80">Utilisateurs bannis</p>
+        </div>
+    </div>
+</div>
+
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <h5 class="font-semibold text-gray-700 m-0">Utilisateurs récents</h5>
+            <a href="users.php" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200">
+                <i class="fas fa-users mr-2"></i> Gérer tous les utilisateurs
+            </a>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom d'utilisateur</th>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Niveau</th>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date d'inscription</th>
+                            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($recentUsers as $user): ?>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><?= $user['id'] ?></td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><?= escapeString($user['username']) ?></td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500"><?= escapeString($user['email']) ?></td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="user-level user-level-<?= $user['user_level'] ?>">
+                                        <?= getUserLevelText($user['user_level']) ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500"><?= date('d/m/Y H:i', strtotime($user['created_at'])) ?></td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                    <a href="user-edit.php?id=<?= $user['id'] ?>" class="inline-flex items-center p-1.5 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors duration-200">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentUsers as $user): ?>
-                                <tr>
-                                    <td><?= $user['id'] ?></td>
-                                    <td><?= escapeString($user['username']) ?></td>
-                                    <td><?= escapeString($user['email']) ?></td>
-                                    <td>
-                                        <span class="user-level user-level-<?= $user['user_level'] ?>">
-                                            <?= getUserLevelText($user['user_level']) ?>
-                                        </span>
-                                    </td>
-                                    <td><?= date('d/m/Y H:i', strtotime($user['created_at'])) ?></td>
-                                    <td>
-                                        <a href="user-edit.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            
-                            <?php if (empty($recentUsers)): ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">Aucun utilisateur trouvé</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                        <?php endforeach; ?>
+                        
+                        <?php if (empty($recentUsers)): ?>
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">Aucun utilisateur trouvé</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

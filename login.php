@@ -1,11 +1,17 @@
 <?php
 $pageTitle = "Connexion";
-require_once 'includes/header.php';
+require_once 'includes/config.php';
+require_once 'includes/functions.php';
+require_once 'includes/auth.php';
 
-// Rediriger si l'utilisateur est déjà connecté
+// Rediriger avant d'inclure le header qui génère du HTML
 if (isLoggedIn()) {
     redirect('index.php');
 }
+
+// Maintenant on peut inclure le header qui va générer du HTML
+require_once 'includes/header.php';
+
 
 $errors = [];
 $username = '';
@@ -56,15 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">Connexion</h2>
+<div class="flex justify-center">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Connexion</h2>
                 
                 <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+                        <ul class="list-disc ml-5">
                             <?php foreach ($errors as $error): ?>
                                 <li><?= escapeString($error) ?></li>
                             <?php endforeach; ?>
@@ -75,30 +81,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <form action="login.php" method="POST" novalidate>
                     <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                     
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Nom d'utilisateur</label>
-                        <input type="text" class="form-control" id="username" name="username" value="<?= escapeString($username) ?>" required>
+                    <div class="mb-4">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Nom d'utilisateur</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               id="username" name="username" value="<?= escapeString($username) ?>" required>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Mot de passe</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                        <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               id="password" name="password" required>
                     </div>
                     
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
-                        <label class="form-check-label" for="remember_me">Se souvenir de moi</label>
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
+                                   id="remember_me" name="remember_me">
+                            <label for="remember_me" class="ml-2 block text-sm text-gray-700">
+                                Se souvenir de moi
+                            </label>
+                        </div>
                     </div>
                     
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> Se connecter
+                    <div>
+                        <button type="submit" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Se connecter
                         </button>
                     </div>
                 </form>
                 
-                <div class="mt-3 text-center">
-                    <p>Vous n'avez pas de compte ? <a href="register.php">Inscrivez-vous</a></p>
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Vous n'avez pas de compte ? 
+                        <a href="register.php" class="font-medium text-blue-600 hover:text-blue-500">
+                            Inscrivez-vous
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>

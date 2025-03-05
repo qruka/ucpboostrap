@@ -1,317 +1,113 @@
-/* Structure principale du dashboard */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
-}
-
-/* Layout du dashboard - CETTE PARTIE EST CRUCIALE */
-.dashboard-layout {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    position: relative;
-}
-
-/* Sidebar - MENU LATÉRAL À GAUCHE */
-.sidebar {
-    width: 260px;
-    min-height: 100vh;
-    background: #2c3e50;
-    color: #ecf0f1;
-    transition: all 0.3s ease;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 1000;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header .logo {
-    width: 40px;
-    height: 40px;
-    margin-right: 10px;
-    border-radius: 5px;
-}
-
-.sidebar-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.sidebar-nav {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-top: 10px;
-}
-
-.sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar-nav li {
-    margin: 0;
-    padding: 0;
-}
-
-.sidebar-nav li.nav-divider {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 20px 20px 5px;
-    opacity: 0.7;
-}
-
-.sidebar-nav li a {
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    color: #ecf0f1;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.sidebar-nav li a:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-nav li.active a {
-    background: #3498db;
-    color: white;
-}
-
-.sidebar-nav .nav-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-}
-
-.sidebar-footer {
-    padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 12px;
-    text-align: center;
-}
-
-/* Zone de contenu principal - À DROITE DU SIDEBAR */
-.main-content {
-    flex-grow: 1;
-    margin-left: 260px; /* Même largeur que le sidebar */
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: #f5f6fa;
-}
-
-/* Header du contenu principal */
-.top-header {
-    height: 60px;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    position: sticky;
-    top: 0;
-    z-index: 900;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.sidebar-toggle {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #2c3e50;
-    padding: 5px;
-    display: none; /* Caché sur desktop */
-}
-
-.admin-badge {
-    margin-right: auto;
-    margin-left: 20px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-}
-
-/* Styles pour les cartes et autres éléments */
-.card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    /* Suppression de la transition qui causait l'animation de flottement */
-    /* transition: transform 0.2s; */
-}
-
-/* Suppression complète de l'effet de flottement au survol */
-.card:hover {
-    /* Suppression de la transformation qui déplaçait la carte vers le haut */
-    /* transform: translateY(-5px); */
-}
-
-.card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #f1f1f1;
-    padding: 15px 20px;
-    border-top-left-radius: 10px !important;
-    border-top-right-radius: 10px !important;
-}
-
-.stats-card {
-    padding: 20px;
-    text-align: center;
-    border-radius: 10px;
-    color: white;
-}
-
-.stats-card.primary {
-    background: linear-gradient(to right, #4e54c8, #8f94fb);
-}
-
-.stats-card.success {
-    background: linear-gradient(to right, #11998e, #38ef7d);
-}
-
-.stats-card.warning {
-    background: linear-gradient(to right, #f2994a, #f2c94c);
-}
-
-.stats-card.danger {
-    background: linear-gradient(to right, #eb3349, #f45c43);
-}
-
-.stats-card h2 {
-    font-size: 2.5rem;
-    margin: 10px 0;
-}
-
-.stats-card p {
-    font-size: 1rem;
-    opacity: 0.8;
-    margin-bottom: 0;
-}
-
-.stats-card i {
-    font-size: 3rem;
-    opacity: 0.4;
-}
-
-/* Responsive pour le menu latéral */
-@media (max-width: 992px) {
+/* Dashboard specific styles using Tailwind */
+@layer components {
+    /* Sidebar styles */
     .sidebar {
-        margin-left: -260px; /* Caché par défaut sur mobile */
+      @apply w-64 min-h-screen bg-secondary text-white fixed top-0 left-0 bottom-0 z-10 shadow-lg flex flex-col transition-all duration-300 ease-in-out;
     }
     
-    .sidebar.active {
-        margin-left: 0; /* Visible quand activé */
+    .sidebar-header {
+      @apply p-5 flex items-center border-b border-white/10;
     }
     
+    .sidebar-header .logo {
+      @apply w-10 h-10 mr-3 rounded;
+    }
+    
+    .sidebar-header h3 {
+      @apply m-0 text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis;
+    }
+    
+    .sidebar-nav {
+      @apply flex-grow overflow-y-auto pt-3;
+    }
+    
+    .sidebar-nav ul {
+      @apply list-none p-0 m-0;
+    }
+    
+    .sidebar-nav li {
+      @apply m-0 p-0;
+    }
+    
+    .sidebar-nav li.nav-divider {
+      @apply text-xs uppercase tracking-wide py-5 px-5 pb-1 opacity-70;
+    }
+    
+    .sidebar-nav li a {
+      @apply flex items-center py-3 px-5 text-white no-underline transition-all duration-300;
+    }
+    
+    .sidebar-nav li a:hover {
+      @apply bg-white/10;
+    }
+    
+    .sidebar-nav li.active a {
+      @apply bg-blue-500 text-white;
+    }
+    
+    .sidebar-nav .nav-icon {
+      @apply w-5 h-5 mr-3;
+    }
+    
+    .sidebar-footer {
+      @apply p-4 border-t border-white/10 text-xs text-center;
+    }
+    
+    /* Main content area */
     .main-content {
-        margin-left: 0; /* Pleine largeur sur mobile */
+      @apply flex-grow ml-64 transition-all duration-300 ease-in-out flex flex-col min-h-screen bg-gray-50;
+    }
+    
+    /* Top header */
+    .top-header {
+      @apply h-16 bg-white shadow-sm flex items-center px-5 sticky top-0 z-40;
+    }
+    
+    .header-content {
+      @apply flex justify-between items-center w-full;
     }
     
     .sidebar-toggle {
-        display: block; /* Visible sur mobile */
+      @apply bg-transparent border-0 text-xl cursor-pointer text-secondary p-1 hidden;
     }
     
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        display: none;
+    /* Special logout button */
+    .sidebar-nav .logout-link,
+    .sidebar-nav li:last-child a[href*="logout.php"],
+    #logout-item a {
+      @apply bg-red-700 mx-4 rounded-lg transition-all duration-300 ease-in-out text-white;
     }
     
-    .sidebar-overlay.active {
-        display: block;
+    .sidebar-nav .logout-link:hover,
+    .sidebar-nav li:last-child a[href*="logout.php"]:hover,
+    #logout-item a:hover {
+      @apply bg-red-600 shadow-md;
     }
-}
-
-/* User Level Badge */
-.user-level {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.user-level-1 {
-    background-color: #e9ecef;
-    color: #495057;
-}
-
-.user-level-2 {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-.user-level-3 {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.user-level-4 {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-
-/* Style spécial pour le bouton de déconnexion - Sélecteurs multiples pour assurer la compatibilité */
-.sidebar-nav .logout-link,
-.sidebar-nav li:last-child a[href*="logout.php"],
-#logout-item a {
-    background-color: #c0392b; /* Rouge foncé élégant */
-    margin: 10px 15px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    color: #ffffff !important;
-}
-
-.sidebar-nav .logout-link:hover,
-.sidebar-nav li:last-child a[href*="logout.php"]:hover,
-#logout-item a:hover {
-    background-color: #e74c3c; /* Rouge plus clair au survol */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* S'assurer que l'icône et le texte sont blancs */
-.sidebar-nav .logout-link i,
-.sidebar-nav li:last-child a[href*="logout.php"] i,
-#logout-item a i,
-.sidebar-nav .logout-link span,
-.sidebar-nav li:last-child a[href*="logout.php"] span,
-#logout-item a span {
-    color: #ffffff !important;
-}
+    
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      .sidebar {
+        @apply -ml-64; /* Hidden by default on mobile */
+      }
+      
+      .sidebar.active {
+        @apply ml-0; /* Visible when active */
+      }
+      
+      .main-content {
+        @apply ml-0; /* Full width on mobile */
+      }
+      
+      .sidebar-toggle {
+        @apply block; /* Visible on mobile */
+      }
+      
+      .sidebar-overlay {
+        @apply fixed top-0 left-0 w-full h-full bg-black/50 z-40 hidden;
+      }
+      
+      .sidebar-overlay.active {
+        @apply block;
+      }
+    }
+  }
