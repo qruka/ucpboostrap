@@ -20,7 +20,7 @@ define('DB_PASS', env('DB_PASS', ''));
 define('DB_NAME', env('DB_NAME', 'mon_site'));
 
 // Paramètres de l'application
-define('APP_NAME', env('APP_NAME', 'Mon Site Web'));
+define('APP_NAME', env('APP_NAME', 'DASHBOARD'));
 define('APP_URL', env('APP_URL', 'http://localhost'));
 define('APP_VERSION', env('APP_VERSION', '2.1'));
 define('APP_ENV', env('APP_ENV', 'production'));

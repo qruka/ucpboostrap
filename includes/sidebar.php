@@ -12,6 +12,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 // Obtenir les informations de l'utilisateur si connecté
 $loggedUser = isLoggedIn() ? getUserById($_SESSION['user_id']) : null;
+
+// Récupérer le thème préféré de l'utilisateur (par défaut light)
+$userTheme = $_COOKIE['theme'] ?? 'light';
 ?>
 
 <div class="sidebar transition-all duration-300">
@@ -54,6 +57,20 @@ $loggedUser = isLoggedIn() ? getUserById($_SESSION['user_id']) : null;
     </div>
     <?php endif; ?>
     
+    <!-- Sélecteur de thème -->
+    <div class="px-4 py-2 border-b border-gray-700">
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-400">Thème</span>
+            <button id="theme-toggle" class="p-2 rounded-full bg-gray-700 text-white">
+                <?php if ($userTheme === 'dark'): ?>
+                    <i class="fas fa-sun"></i>
+                <?php else: ?>
+                    <i class="fas fa-moon"></i>
+                <?php endif; ?>
+            </button>
+        </div>
+    </div>
+    
     <!-- Navigation principale -->
     <nav class="sidebar-nav">
         <ul class="py-2">
@@ -71,35 +88,11 @@ $loggedUser = isLoggedIn() ? getUserById($_SESSION['user_id']) : null;
                     <span>Mon compte</span>
                 </li>
                 
-                <!-- Profil -->
-                <li class="<?= $currentPage == 'profile.php' ? 'active' : '' ?>">
-                    <a href="<?= APP_URL ?>/profile.php" class="sidebar-link <?= $currentPage == 'profile.php' ? 'active-link' : '' ?>">
-                        <i class="fas fa-user nav-icon"></i>
-                        <span>Mon profil</span>
-                    </a>
-                </li>
-                
-                <!-- Paramètres -->
+                <!-- Paramètres (maintenant avec icône utilisateur pour montrer la fusion) -->
                 <li class="<?= $currentPage == 'settings.php' ? 'active' : '' ?>">
                     <a href="<?= APP_URL ?>/settings.php" class="sidebar-link <?= $currentPage == 'settings.php' ? 'active-link' : '' ?>">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Paramètres</span>
-                    </a>
-                </li>
-                
-                <!-- Mot de passe -->
-                <li class="<?= $currentPage == 'password.php' ? 'active' : '' ?>">
-                    <a href="<?= APP_URL ?>/password.php" class="sidebar-link <?= $currentPage == 'password.php' ? 'active-link' : '' ?>">
-                        <i class="fas fa-key nav-icon"></i>
-                        <span>Mot de passe</span>
-                    </a>
-                </li>
-                
-                <!-- Sécurité -->
-                <li class="<?= $currentPage == 'security.php' ? 'active' : '' ?>">
-                    <a href="<?= APP_URL ?>/security.php" class="sidebar-link <?= $currentPage == 'security.php' ? 'active-link' : '' ?>">
-                        <i class="fas fa-shield-alt nav-icon"></i>
-                        <span>Sécurité</span>
+                        <i class="fas fa-user-cog nav-icon"></i>
+                        <span>Mon compte</span>
                     </a>
                 </li>
                 
@@ -109,31 +102,13 @@ $loggedUser = isLoggedIn() ? getUserById($_SESSION['user_id']) : null;
                         <span>Administration</span>
                     </li>
                 
-                    <!-- Tableau de bord admin -->
-                    <li class="<?= $isAdmin && $currentPage == 'index.php' ? 'active' : '' ?>">
-                        <a href="<?= APP_URL ?>/admin/index.php" class="sidebar-link <?= $isAdmin && $currentPage == 'index.php' ? 'active-link' : '' ?>">
+                    <!-- Tableau de bord admin centralisé -->
+                    <li class="<?= $isAdmin ? 'active' : '' ?>">
+                        <a href="<?= APP_URL ?>/admin/index.php" class="sidebar-link <?= $isAdmin ? 'active-link' : '' ?>">
                             <i class="fas fa-tachometer-alt nav-icon"></i>
-                            <span>Tableau de bord</span>
+                            <span>Administration</span>
                         </a>
                     </li>
-                    
-                    <?php if (isAdmin()): ?>
-                        <!-- Utilisateurs -->
-                        <li class="<?= in_array($currentPage, ['users.php', 'user-edit.php']) ? 'active' : '' ?>">
-                            <a href="<?= APP_URL ?>/admin/users.php" class="sidebar-link <?= in_array($currentPage, ['users.php', 'user-edit.php']) ? 'active-link' : '' ?>">
-                                <i class="fas fa-users nav-icon"></i>
-                                <span>Utilisateurs</span>
-                            </a>
-                        </li>
-                        
-                        <!-- Configuration -->
-                        <li class="<?= $currentPage == 'site-settings.php' ? 'active' : '' ?>">
-                            <a href="<?= APP_URL ?>/admin/site-settings.php" class="sidebar-link <?= $currentPage == 'site-settings.php' ? 'active-link' : '' ?>">
-                                <i class="fas fa-sliders-h nav-icon"></i>
-                                <span>Configuration</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
                 <?php endif; ?>
                 
                 <!-- Déconnexion -->
@@ -180,6 +155,33 @@ $loggedUser = isLoggedIn() ? getUserById($_SESSION['user_id']) : null;
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Script pour le toggle de thème -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            // Vérifier le thème actuel
+            const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Mettre à jour les classes
+            if (newTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+            
+            // Sauvegarder la préférence dans un cookie (valide 30 jours)
+            document.cookie = `theme=${newTheme};path=/;max-age=${60*60*24*30}`;
+        });
+    }
+});
+</script>
 
 <!-- Styles pour la barre latérale -->
 <style>
