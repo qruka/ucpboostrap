@@ -14,6 +14,9 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     
+    <!-- Chart.js pour les graphiques -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <!-- JavaScript personnalisé -->
     <script>
         // Initialisation des comportements après chargement du DOM
@@ -74,7 +77,7 @@
             });
             
             // Initialisation des DataTables
-            if ($.fn.DataTable) {
+            if (typeof $.fn.DataTable !== 'undefined') {
                 $('.data-table').DataTable({
                     language: {
                         url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json'
@@ -95,7 +98,46 @@
                     }
                 });
             });
+            
+            // Modal de bannissement
+            if (typeof showBanModal === 'function') {
+                const showBanButtons = document.querySelectorAll('[data-action="show-ban-modal"]');
+                showBanButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        const username = this.getAttribute('data-username');
+                        showBanModal(userId, username);
+                    });
+                });
+            }
+            
+            // Fermeture des modals
+            const closeModalButtons = document.querySelectorAll('#closeModal, #cancelModal, #banModalOverlay');
+            closeModalButtons.forEach(button => {
+                if (button) {
+                    button.addEventListener('click', function() {
+                        const modal = document.getElementById('banUserModal');
+                        if (modal) {
+                            modal.classList.add('hidden');
+                        }
+                    });
+                }
+            });
         });
+        
+        /**
+         * Affiche la modal de suspension d'un utilisateur
+         * @param {number} userId - ID de l'utilisateur
+         * @param {string} username - Nom d'utilisateur
+         */
+        function showBanModal(userId, username) {
+            const modal = document.getElementById('banUserModal');
+            if (!modal) return;
+            
+            document.getElementById('userId').value = userId;
+            document.getElementById('banModalUsername').textContent = username;
+            modal.classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
