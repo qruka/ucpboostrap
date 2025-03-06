@@ -2,100 +2,99 @@
 require_once 'config.php';
 
 /**
- * Connexion à la base de données
+ * Creates a new database connection
  * 
- * @return mysqli L'objet de connexion à la base de données
- * @throws Exception Si la connexion échoue
+ * @return mysqli|null The database connection object or null on failure
  */
 function connectDB() {
-    static $conn = null;
-    
-    // Connexion singleton (évite de créer plusieurs connexions)
-    if ($conn === null) {
+    try {
         $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         
-        // Vérifier la connexion
         if ($conn->connect_error) {
-            $error = "Erreur de connexion à la base de données: " . $conn->connect_error;
-            
-            // Journaliser l'erreur mais ne pas l'afficher aux utilisateurs en production
-            error_log($error);
-            
-            if (APP_ENV === 'development') {
-                throw new Exception($error);
-            } else {
-                throw new Exception("Une erreur de connexion à la base de données est survenue. Veuillez contacter l'administrateur.");
-            }
+            error_log("Database connection error: " . $conn->connect_error);
+            return null;
         }
         
-        // Définir le jeu de caractères
         $conn->set_charset("utf8mb4");
+        return $conn;
+    } catch (Exception $e) {
+        error_log("Exception in connectDB: " . $e->getMessage());
+        return null;
     }
-    
-    return $conn;
 }
 
 /**
- * Exécute une requête SQL préparée avec des paramètres
+ * Safely executes a prepared SQL query with parameters
  * 
- * @param string $sql La requête SQL avec des placeholders
- * @param array $params Les paramètres à lier à la requête
- * @return mysqli_result|bool Le résultat de la requête ou false en cas d'erreur
+ * @param string $sql The SQL query with placeholders
+ * @param array $params Parameters to bind
+ * @return mysqli_result|bool Query result or false on failure
  */
 function executeQuery($sql, $params = []) {
+    // Create a fresh connection for this query
+    $conn = connectDB();
+    
+    if (!$conn) {
+        return false;
+    }
+    
     try {
-        $conn = connectDB();
         $stmt = $conn->prepare($sql);
         
-        if ($stmt === false) {
-            throw new Exception("Erreur de préparation de la requête: " . $conn->error);
+        if (!$stmt) {
+            error_log("SQL prepare error: " . $conn->error . " for query: " . $sql);
+            return false;
         }
         
+        // Bind parameters if any
         if (!empty($params)) {
             $types = '';
+            $bindParams = [];
+            
             foreach ($params as $param) {
                 if (is_int($param)) {
                     $types .= 'i';
-                } elseif (is_float($param) || is_double($param)) {
+                } elseif (is_float($param)) {
                     $types .= 'd';
                 } elseif (is_string($param)) {
                     $types .= 's';
                 } else {
                     $types .= 'b';
                 }
+                $bindParams[] = $param;
             }
             
-            // Créer un tableau avec les références
-            $bindParams = array_merge([$types], $params);
-            $bindParamsRefs = [];
+            // Create array of references
+            $bindValues = array_merge([$types], $bindParams);
+            $refs = [];
             
-            for ($i = 0; $i < count($bindParams); $i++) {
-                $bindParamsRefs[] = &$bindParams[$i];
+            foreach ($bindValues as $key => $value) {
+                $refs[$key] = &$bindValues[$key];
             }
             
-            call_user_func_array([$stmt, 'bind_param'], $bindParamsRefs);
+            call_user_func_array([$stmt, 'bind_param'], $refs);
         }
         
-        // Exécuter la requête
-        if (!$stmt->execute()) {
-            throw new Exception("Erreur d'exécution de la requête: " . $stmt->error);
-        }
+        // Execute the query
+        $stmt->execute();
         
-        // Récupérer le résultat pour les requêtes SELECT
+        // Get result for SELECT queries
         $result = $stmt->get_result();
         
         $stmt->close();
         
+        // Close the connection immediately after use
+        $conn->close();
+        
         return $result;
     } catch (Exception $e) {
-        // Journaliser l'erreur
-        error_log($e->getMessage());
+        error_log("Exception in executeQuery: " . $e->getMessage() . " for query: " . $sql);
         
-        // Afficher l'erreur en mode développement
-        if (APP_ENV === 'development') {
-            echo "<div style='color:red; padding:10px; border:1px solid red;'>";
-            echo "Erreur SQL: " . $e->getMessage();
-            echo "</div>";
+        // Try to close the connection even if there was an error
+        try {
+            $conn->close();
+        } catch (Exception $closeError) {
+            // Ignore close errors
         }
         
         return false;
@@ -103,29 +102,45 @@ function executeQuery($sql, $params = []) {
 }
 
 /**
- * Exécute une transaction avec plusieurs requêtes
+ * Execute a series of queries within a transaction
  * 
- * @param callable $callback Fonction contenant les requêtes à exécuter
- * @return bool True si la transaction réussit, false sinon
+ * @param callable $callback Function containing the queries
+ * @return bool True on success, false on failure
  */
 function executeTransaction($callback) {
+    // Create a fresh connection
     $conn = connectDB();
+    
+    if (!$conn) {
+        return false;
+    }
     
     try {
         $conn->begin_transaction();
-        
         $result = $callback($conn);
         
         if ($result) {
             $conn->commit();
-            return true;
         } else {
             $conn->rollback();
-            return false;
         }
+        
+        // Close the connection
+        $conn->close();
+        
+        return $result;
     } catch (Exception $e) {
-        $conn->rollback();
-        error_log("Erreur de transaction: " . $e->getMessage());
+        error_log("Transaction error: " . $e->getMessage());
+        
+        try {
+            $conn->rollback();
+            $conn->close();
+        } catch (Exception $closeError) {
+            // Ignore rollback and close errors
+        }
+        
         return false;
     }
 }
+
+// NO SHUTDOWN FUNCTION - We don't need one as each function manages its own connections

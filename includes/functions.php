@@ -8,11 +8,20 @@ require_once 'auth.php';
  * @param string $location L'URL de redirection
  */
 function redirect($location) {
-    // S'assurer que la sortie est bien envoyée avant la redirection
-    if (ob_get_length()) {
+    // Nettoyage des tampons de sortie existants
+    while (ob_get_level()) {
         ob_end_clean();
     }
     
+    // Si la sortie a déjà commencé, utiliser JavaScript pour la redirection
+    if (headers_sent()) {
+        echo '<script>window.location.href="' . $location . '";</script>';
+        echo '<noscript><meta http-equiv="refresh" content="0;url=' . $location . '"></noscript>';
+        echo 'Si vous n\'êtes pas redirigé automatiquement, <a href="' . $location . '">cliquez ici</a>.';
+        exit;
+    }
+    
+    // Sinon, utiliser la redirection HTTP standard
     header("Location: $location");
     exit;
 }
@@ -27,6 +36,7 @@ function escapeString($string) {
     return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
 }
 
+
 /**
  * Générer un hash sécurisé pour les mots de passe
  * 
@@ -37,19 +47,6 @@ function hashPassword($password) {
     return password_hash($password, PASSWORD_DEFAULT, ['cost' => 12]);
 }
 
-/**
- * Générer un token CSRF avec une durée de vie
- * 
- * @param int $expiry Durée de vie du token en secondes (par défaut 1 heure)
- * @return string Le token CSRF
- */
-function generateCSRFToken($expiry = 3600) {
-    $token = bin2hex(random_bytes(32));
-    $_SESSION['csrf_token'] = $token;
-    $_SESSION['csrf_token_expiry'] = time() + $expiry;
-    
-    return $token;
-}
 
 /**
  * Vérifier un token CSRF
@@ -59,18 +56,43 @@ function generateCSRFToken($expiry = 3600) {
  */
 function verifyCSRFToken($token) {
     if (!isset($_SESSION['csrf_token']) || !isset($_SESSION['csrf_token_expiry'])) {
+        error_log("CSRF Token ou expiration non trouvés dans la session");
         return false;
     }
     
     // Vérifier si le token a expiré
     if (time() > $_SESSION['csrf_token_expiry']) {
+        error_log("CSRF Token expiré");
         unset($_SESSION['csrf_token']);
         unset($_SESSION['csrf_token_expiry']);
         return false;
     }
     
     // Vérifier si le token correspond
-    return hash_equals($_SESSION['csrf_token'], $token);
+    $result = hash_equals($_SESSION['csrf_token'], $token);
+    if (!$result) {
+        error_log("CSRF Token mismatch. Session token: " . substr($_SESSION['csrf_token'], 0, 10) . "... vs Provided token: " . substr($token, 0, 10) . "...");
+    }
+    return $result;
+}
+
+/**
+ * Générer un token CSRF avec une durée de vie
+ * 
+ * @param int $expiry Durée de vie du token en secondes (par défaut 1 heure)
+ * @return string Le token CSRF
+ */
+function generateCSRFToken($expiry = 3600) {
+    // Si un token existe déjà et n'est pas expiré, le réutiliser
+    if (isset($_SESSION['csrf_token']) && isset($_SESSION['csrf_token_expiry']) && time() < $_SESSION['csrf_token_expiry']) {
+        return $_SESSION['csrf_token'];
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $token;
+    $_SESSION['csrf_token_expiry'] = time() + $expiry;
+    
+    return $token;
 }
 
 /**
@@ -80,22 +102,52 @@ function verifyCSRFToken($token) {
  * @return array|null Les données utilisateur ou null si introuvable
  */
 function getUserById($userId) {
-    static $users = []; // Cache pour éviter les requêtes répétées
+    // Vérification de base pour éviter des requêtes inutiles
+    if (!$userId || !is_numeric($userId) || $userId <= 0) {
+        return null;
+    }
+
+    // Cache statique pour les données utilisateur
+    static $users = [];
     
+    // Si l'utilisateur n'est pas dans le cache, on le récupère de la base de données
     if (!isset($users[$userId])) {
+        $conn = connectDB();
+        
+        // Vérifier si la connexion a réussi
+        if (!$conn) {
+            error_log("Erreur de connexion à la base de données dans getUserById()");
+            return null;
+        }
+        
         $sql = "SELECT * FROM users WHERE id = ?";
-        $result = executeQuery($sql, [$userId]);
+        $stmt = $conn->prepare($sql);
+        
+        // Vérifier si la préparation a réussi
+        if (!$stmt) {
+            error_log("Erreur de préparation de la requête dans getUserById(): " . $conn->error);
+            $conn->close();
+            return null;
+        }
+        
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
         
         if ($result && $result->num_rows > 0) {
             $users[$userId] = $result->fetch_assoc();
         } else {
+            // Journaliser l'échec de récupération d'utilisateur
+            error_log("Utilisateur avec ID $userId non trouvé dans getUserById()");
             $users[$userId] = null;
         }
+        
+        $stmt->close();
+        $conn->close();
     }
     
     return $users[$userId];
 }
-
 /**
  * Vérifier si un email existe déjà
  * 
@@ -526,6 +578,9 @@ function setFlashMessage($message, $type = 'info') {
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_type'] = $type;
 }
+
+
+
 
 /**
  * Récupérer les activités d'un utilisateur

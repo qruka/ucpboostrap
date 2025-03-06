@@ -6,14 +6,36 @@ require_once 'includes/header.php';
 if (!isLoggedIn()) {
     setFlashMessage("Veuillez vous connecter pour accéder à cette page.", "warning");
     redirect('login.php');
+    exit; // Assurez-vous que le script s'arrête ici
 }
 
 // Récupérer les informations de l'utilisateur
-$user = getUserById($_SESSION['user_id']);
-if (!$user) {
-    setFlashMessage("Utilisateur introuvable.", "danger");
+// Tentative avec gestion d'erreur explicite
+$user = null;
+try {
+    $user = getUserById($_SESSION['user_id']);
+    
+    // Si getUserById renvoie null, c'est que l'utilisateur n'existe pas
+    if (!$user) {
+        // Journaliser cette erreur pour le débogage
+        error_log("Utilisateur ID {$_SESSION['user_id']} introuvable dans settings.php");
+        
+        // Déconnecter l'utilisateur car ses données sont invalides
+        session_unset();
+        session_regenerate_id(true);
+        
+        setFlashMessage("Votre session a expiré. Veuillez vous reconnecter.", "warning");
+        redirect('login.php');
+        exit;
+    }
+} catch (Exception $e) {
+    error_log("Exception dans settings.php: " . $e->getMessage());
+    setFlashMessage("Une erreur est survenue lors de la récupération de vos informations.", "danger");
     redirect('index.php');
+    exit;
 }
+
+// Le reste du code settings.php suit ici...
 
 // Récupérer l'historique des connexions
 $loginHistory = getUserLoginHistory($_SESSION['user_id'], 5);

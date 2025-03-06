@@ -8,9 +8,27 @@ require_once 'db.php';
  * @return bool Vrai si l'utilisateur est connecté
  */
 function isLoggedIn() {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+    // Vérifier que la session existe et contient un identifiant utilisateur
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+        return false;
+    }
+    
+    // Vérifier que l'utilisateur existe toujours dans la base de données
+    // (Optionnel mais recommandé pour des raisons de sécurité)
+    $userId = $_SESSION['user_id'];
+    $user = getUserById($userId);
+    
+    if (!$user) {
+        // Si l'utilisateur n'existe pas, nettoyons la session
+        session_unset();
+        session_destroy();
+        // Redémarrons une nouvelle session
+        session_start();
+        return false;
+    }
+    
+    return true;
 }
-
 /**
  * Récupère le niveau d'accès de l'utilisateur connecté
  * 

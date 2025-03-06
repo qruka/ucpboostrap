@@ -1,4 +1,7 @@
 <?php
+// Démarrer la mise en mémoire tampon globale dès le début du fichier
+ob_start();
+
 // Charger les variables d'environnement depuis .env
 if (file_exists(__DIR__ . '/../.env')) {
     $env = parse_ini_file(__DIR__ . '/../.env');

@@ -22,13 +22,15 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
+    $stmt->close();
     $conn->close();
     setFlashMessage("Actualité introuvable.", "danger");
     redirect('../index.php');
 }
 
 $news = $result->fetch_assoc();
-$conn->close();
+$stmt->close();
+// Ne pas fermer la connexion ici, nous en aurons besoin plus tard
 
 $errors = [];
 $success = false;
@@ -99,12 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Si aucune erreur, mettre à jour la news
         if (empty($errors)) {
-            $conn = connectDB();
+            // La connexion est déjà ouverte, mais vérifions qu'elle est toujours valide
+            if (!$conn || !$conn->ping()) {
+                // Si la connexion n'est plus valide, créons-en une nouvelle
+                $conn = connectDB();
+            }
             
             // Utiliser une transaction
-            $conn->begin_transaction();
-            
             try {
+                $conn->begin_transaction();
+                
                 // Mettre à jour la news
                 $sql = "UPDATE news SET title = ?, content = ?, image_path = ?, updated_at = NOW() WHERE id = ?";
                 $stmt = $conn->prepare($sql);
@@ -141,11 +147,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($imagePath !== $news['image_path'] && $imagePath && file_exists($imagePath)) {
                     unlink($imagePath);
                 }
+            } finally {
+                // Fermer la connexion quoi qu'il arrive
+                $conn->close();
             }
-            
-            $conn->close();
         }
     }
+} else {
+    // Si on n'est pas dans un traitement de formulaire, on peut fermer la connexion
+    $conn->close();
 }
 ?>
 

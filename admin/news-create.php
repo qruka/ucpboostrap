@@ -1,4 +1,7 @@
 <?php
+// Démarrer la mise en mémoire tampon dès le début du fichier
+ob_start();
+
 $pageTitle = "Créer une actualité";
 require_once '../includes/admin-header.php';
 
@@ -53,9 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Déplacer le fichier uploadé
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                    $imagePath = $targetFile;
+                    // Store a web-accessible path (starting with /) rather than a server path
+                    $imagePath = '/uploads/news/' . $newFileName;
+                    
+                    // Log successful upload
+                    error_log("Image uploaded successfully: " . $targetFile . " | Web path: " . $imagePath);
                 } else {
                     $errors[] = "Erreur lors de l'enregistrement de l'image.";
+                    error_log("Failed to move uploaded file from {$_FILES['image']['tmp_name']} to {$targetFile}");
                 }
             }
         }
@@ -90,7 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $success = true;
                 
                 setFlashMessage("L'actualité a été créée avec succès.", "success");
-                redirect('../index.php');
+                
+                // Vider et fermer tous les tampons avant la redirection
+                ob_end_clean();
+                header("Location: ../index.php");
+                exit;
             } catch (Exception $e) {
                 $conn->rollback();
                 $errors[] = "Une erreur est survenue lors de la création de l'actualité: " . $e->getMessage();
@@ -105,6 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Générer un nouveau token CSRF
+$csrf_token = generateCSRFToken();
 ?>
 
 <div class="mb-6">
@@ -144,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         
         <form action="news-create.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
             
             <div class="grid grid-cols-1 gap-y-6">
                 <div>
@@ -232,4 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once '../includes/admin-footer.php'; ?>
+<?php 
+// On s'assure de faire un flush du buffer à la fin du fichier
+require_once '../includes/admin-footer.php';
+ob_end_flush();
+?>

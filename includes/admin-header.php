@@ -1,4 +1,7 @@
 <?php 
+// Démarrer la mise en mémoire tampon dès le début du fichier
+ob_start();
+
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
 require_once '../includes/auth.php';
